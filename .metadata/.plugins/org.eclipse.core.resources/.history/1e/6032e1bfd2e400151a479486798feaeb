@@ -1,0 +1,8 @@
+package a.b
+
+object TestScalaClass {
+    def main(args: Array[String]) {
+      val str="ygjh23e,$%^&)~!@#$%^&*()PFGHJlk"
+      println(str.replaceAll("[^A-Za-z0-9]", "").toLowerCase());
+    }
+}

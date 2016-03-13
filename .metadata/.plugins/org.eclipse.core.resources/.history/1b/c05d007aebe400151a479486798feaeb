@@ -1,0 +1,61 @@
+package e63.course.assignment6
+
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+import org.apache.log4j.Logger
+import org.apache.log4j.Level
+
+object Problem1 {
+  def main(args: Array[String]) {
+        
+    // set input and out files/dirs
+    val paragraphAFileName = args(0)
+    val paragraphBFileName = args(1)
+    
+      
+    // Create a Spark Configuration
+    val sparkConf = new SparkConf().setMaster("local").setAppName("Assignment6_Problem1")
+      
+    // Create a Scala Spark Context.
+    val sparkContext = new SparkContext(sparkConf);
+    
+    // Load the input data.
+    val paragraphA = sparkContext.textFile(paragraphAFileName)
+    val paragraphB = sparkContext.textFile(paragraphBFileName)
+    
+    val paragraphATokens = paragraphA.flatMap(line => line.split(" "))
+    val paragraphBTokens = paragraphB.flatMap(line => line.split(" "))
+    
+    
+    val paragraphAWordsOnly = paragraphATokens.filter(word => word.matches("[A-Za-z0-9.,]+")).map(word => word.replaceAll("[.,]", ""))
+    val paragraphBWordsOnly = paragraphBTokens.filter(word => word.matches("[A-Za-z0-9.,]+")).map(word => word.replaceAll("[.,]", ""))
+    
+    println("10 words from paragraph A:")
+    paragraphAWordsOnly.take(10).foreach(println)
+    println("10 words from paragraph B:")
+    paragraphBWordsOnly.take(10).foreach(println)
+    
+    val paragraphAUniqueWordsOnly = paragraphAWordsOnly.distinct()
+    val paragraphBUniqueWordsOnly = paragraphBWordsOnly.distinct()
+    
+    val wordsInParAButNotInParB = paragraphAUniqueWordsOnly.subtract(paragraphBUniqueWordsOnly)
+    
+    val wordsCommonInParAAndParB = paragraphAUniqueWordsOnly.intersection(paragraphBUniqueWordsOnly)
+    
+    
+    println("Total number of tokens in paragraphA: " + paragraphATokens.count());
+    println("Total number of words in paragraphA: " + paragraphAWordsOnly.count());
+    println("Total number of unique words in paragraphA: " + paragraphAUniqueWordsOnly.count());
+    
+    println("Total number of tokens in paragraphB: " + paragraphBTokens.count());
+    println("Total number of words in paragraphB: " + paragraphBWordsOnly.count());
+    println("Total number of unique words in paragraphB: " + paragraphBUniqueWordsOnly.count());
+    
+    println("Total number of words in Paragraph A, but not in Paragraph B: " + wordsInParAButNotInParB.count())
+    wordsInParAButNotInParB.collect().foreach(println)
+    
+    println("Total number of common words in Paragraph A and Paragraph B: " + wordsCommonInParAAndParB.count())
+    wordsCommonInParAAndParB.collect().foreach(println)
+        
+  }
+}

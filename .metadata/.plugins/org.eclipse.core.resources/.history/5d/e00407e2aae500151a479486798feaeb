@@ -1,0 +1,9 @@
+package e63.course.assignment6
+
+object Problem3 {
+  def main(args: Array[String]) {
+    
+    // set input files
+    val empsFilePath = "input_files_for_problem3/emps.txt"
+  }
+}

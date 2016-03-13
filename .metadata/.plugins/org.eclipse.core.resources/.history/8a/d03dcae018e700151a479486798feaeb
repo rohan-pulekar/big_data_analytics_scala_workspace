@@ -1,0 +1,70 @@
+package e63.course.assignment6
+
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+
+/**
+ * @author Rohan Pulekar
+ * Purpose of this program:  
+ * This program is for Assignment6 Problem1 of e63 course (Big Data Analytics) of Spring 2016 batch of Harvard Extension School
+ * 
+ */
+object Problem1 {
+  def main(args: Array[String]) {
+        
+    // set input file paths
+    val paragraphAFileName = args(0)
+    val paragraphBFileName = args(1)
+          
+    // Create a Spark Configuration
+    val sparkConf = new SparkConf().setMaster("local").setAppName("Assignment6_Problem1")
+      
+    // Create a Scala Spark Context.
+    val sparkContext = new SparkContext(sparkConf);
+    
+    // Load the input data into RDDs
+    val paragraphA = sparkContext.textFile(paragraphAFileName)
+    val paragraphB = sparkContext.textFile(paragraphBFileName)
+    
+    // get an RDD of tokens of the input file
+    val paragraphATokens = paragraphA.flatMap(line => line.split(" "))
+    val paragraphBTokens = paragraphB.flatMap(line => line.split(" "))
+    
+    // print out number of tokens
+    println("\nTotal number of tokens in paragraphA: " + paragraphATokens.count());
+    println("\nTotal number of tokens in paragraphB: " + paragraphBTokens.count());
+    
+    // filter in only the words from the tokens
+    // . and , are treated separately because those characters immediately follow a word, in which case we ant to keep the word and get rid of . and ,
+    // distinct is used to get distinct words
+    val paragraphAUniqueWords = paragraphATokens.filter(word => word.matches("[A-Za-z0-9.,]+")).map(word => word.toLowerCase().replaceAll("[.,]", "")).distinct()
+    val paragraphBUniqueWords = paragraphBTokens.filter(word => word.matches("[A-Za-z0-9.,]+")).map(word => word.toLowerCase().replaceAll("[.,]", "")).distinct()
+    
+    // print out number of words
+    println("\nTotal number of unique words in paragraphA: " + paragraphAUniqueWords.count());
+    println("\nTotal number of unique words in paragraphB: " + paragraphBUniqueWords.count());
+    
+    // this prints 10 words from paragraphA and 10 words from paragrahB
+    println("First 10 words from paragraph A:")
+    paragraphAUniqueWords.take(10).foreach(println)
+    println("\nFirst 10 words from paragraph B:")
+    paragraphBUniqueWords.take(10).foreach(println)
+        
+    // create an RDD with words that are in paragraphA but not in paragraphB
+    val wordsInParAButNotInParB = paragraphAUniqueWords.subtract(paragraphBUniqueWords)
+    
+    // create an RDD with words that are common in paragraphA and paragraphB
+    val wordsCommonInParAAndParB = paragraphAUniqueWords.intersection(paragraphBUniqueWords)
+          
+    // print out information of words that are in paragraphA but not in paragraphB
+    println("\nTotal number of words in paragraphA that are not in paragraphB: " + wordsInParAButNotInParB.count())
+    println("\nList of words that are in paragraphA that are not in paragraphB:")
+    wordsInParAButNotInParB.collect().foreach(println)
+    
+    // print out information of words that are common in paragraphA and pragraphB
+    println("\nTotal number of common words in paragraphA that are not in paragraphB: " + wordsCommonInParAAndParB.count())
+    println("\nLis of words that are common in paragraphA and paragraphB")
+    wordsCommonInParAAndParB.collect().foreach(println)
+        
+  }
+}

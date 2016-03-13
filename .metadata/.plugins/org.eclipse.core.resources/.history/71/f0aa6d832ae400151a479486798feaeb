@@ -1,0 +1,9 @@
+package e63.course.assignment6
+
+import scala.AnyVal
+
+object Problem1 {
+  def main(args:Array[String]) {
+    val conf = new SparkContext
+  }
+}

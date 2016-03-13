@@ -1,0 +1,11 @@
+package e63.course.assignment6
+
+import org.apache.spark.SparkConf
+
+object Problem1 {
+  def main(args: Array[String]) {
+    println("hey");
+    var sc = new SparkConf();
+    println(sc);
+  }
+}

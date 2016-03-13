@@ -1,0 +1,40 @@
+package e63.course.assignment6
+
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+import scala.Tuple3
+import org.apache.spark.sql.Row
+import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.types.StructField
+import org.apache.spark.sql.types.StringType
+
+object Problem2 {
+  def main(args: Array[String]) {
+        
+    // set input files
+    val empsFilePath = "input_files_for_problem2/emps.txt"
+    
+    val schemaString = "name,age,salary"
+    
+    // Create a Spark Configuration
+    val sparkConf = new SparkConf().setMaster("local").setAppName("Assignment6_Problem1")
+      
+    // Create a Scala Spark Context.
+    val sparkContext = new SparkContext(sparkConf);
+    
+    val sqlContext = new SQLContext(sparkContext)
+    
+    val emps = sparkContext.textFile(empsFilePath)
+            
+    val emps_fields = emps.map(line => new Tuple3((line.split(",")(0)), (line.split(",")(1)), (line.split(",")(2))))
+    
+    val schema = StructType(schemaString.split(",").map(fieldName => StructField(fieldName, StringType, true)))
+
+    emps_fields.foreach(println)
+
+    val employees = emps_fields.map(e => Row(e._1, e._2.toInt, e._3.toFloat))
+    
+    sqlContext.createDataFrame(employees)
+  }
+}

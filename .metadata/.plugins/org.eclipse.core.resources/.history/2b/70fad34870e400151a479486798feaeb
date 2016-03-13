@@ -1,0 +1,24 @@
+package e63.course.assignment6
+
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+
+object Problem1 {
+  def main(args: Array[String]) {
+    
+    // set input and out files/dirs
+    val inputFile1Name = args(0)
+    val inputFile2Name = args(1)
+    
+      
+    // Create a Spark Configuration
+    val sparkConf = new SparkConf().setAppName("Assignment4_Problem2")
+      
+    // Create a Scala Spark Context.
+      val sparkContext = new SparkContext(sparkConf);
+      
+    println("hey");
+    var sc = new SparkConf()
+    println(sc)
+  }
+}

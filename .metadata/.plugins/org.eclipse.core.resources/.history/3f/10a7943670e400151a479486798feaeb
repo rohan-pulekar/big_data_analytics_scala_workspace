@@ -1,0 +1,16 @@
+package e63.course.assignment6
+
+import org.apache.spark.SparkConf
+
+object Problem1 {
+  def main(args: Array[String]) {
+    
+    // set input and out files/dirs
+    val inputFile1Name = args(0)
+    val inputFile2Name = args(1)
+      
+    println("hey");
+    var sc = new SparkConf()
+    println(sc)
+  }
+}

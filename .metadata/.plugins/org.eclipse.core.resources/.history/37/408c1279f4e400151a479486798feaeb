@@ -1,0 +1,25 @@
+package e63.course.assignment6
+
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+
+object Problem2 {
+  def main(args: Array[String]) {
+        
+    // set input files
+    val empsFilePath = "input_files_for_problem2/emps.txt"
+    
+    // Create a Spark Configuration
+    val sparkConf = new SparkConf().setMaster("local").setAppName("Assignment6_Problem1")
+      
+    // Create a Scala Spark Context.
+    val sparkContext = new SparkContext(sparkConf);
+    
+    val emps = sparkContext.textFile(empsFilePath)
+    
+    val z = new Array[String](3)
+    val 
+        
+    emps.flatMap(line => z).map(word => z)
+  }
+}

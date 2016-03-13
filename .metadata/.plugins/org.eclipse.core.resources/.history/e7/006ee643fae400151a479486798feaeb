@@ -1,0 +1,28 @@
+package e63.course.assignment6
+
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+import scala.Tuple3
+import org.apache.spark.sql.Row
+
+object Problem2 {
+  def main(args: Array[String]) {
+        
+    // set input files
+    val empsFilePath = "input_files_for_problem2/emps.txt"
+    
+    // Create a Spark Configuration
+    val sparkConf = new SparkConf().setMaster("local").setAppName("Assignment6_Problem1")
+      
+    // Create a Scala Spark Context.
+    val sparkContext = new SparkContext(sparkConf);
+    
+    val emps = sparkContext.textFile(empsFilePath)
+            
+    val emps_fields = emps.map(line => new Tuple3((line.split(",")(0)), (line.split(",")(1)), (line.split(",")(2))))
+
+    emps_fields.foreach(println)
+        
+    val employees = emps_fields.map(e => Row(e._1, e._2, e._3))
+  }
+}

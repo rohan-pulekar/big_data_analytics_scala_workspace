@@ -1,0 +1,5 @@
+INDEX VERSION 1.127+/Users/rpulekar/work/big-data-analytics-harvard/scala_workspace_for_course/.metadata/.plugins/org.eclipse.jdt.core
+3353279623.index
+3541825486.index
+871328750.index
+3394722079.index

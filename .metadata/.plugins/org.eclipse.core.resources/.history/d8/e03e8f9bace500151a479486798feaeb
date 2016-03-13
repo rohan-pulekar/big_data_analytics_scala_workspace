@@ -1,0 +1,26 @@
+package e63.course.assignment6
+
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.Row
+
+object Problem3 {
+  def main(args: Array[String]) {
+    
+    // set input files
+    val ebayFilePath = "input_files_for_problem3/ebay.csv"
+    
+    // Create a Spark Configuration
+    val sparkConf = new SparkConf().setMaster("local").setAppName("Assignment6_Problem3")
+      
+    // Create a Scala Spark Context.
+    val sparkContext = new SparkContext(sparkConf);
+    
+    val sqlContext = new SQLContext(sparkContext)
+    
+    val ebayRDD = sparkContext.textFile(ebayFilePath)
+    
+    ebayRDD.map(l => Row(l.split(",")(0), l.split(",")(1), l.split(",")(2), l.split(",")(3), l.split(",")(4), l.split(",")(5), l.split(",")(6), l.split(",")(7), l.split(",")(8)))
+  }
+}

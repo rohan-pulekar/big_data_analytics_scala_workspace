@@ -1,0 +1,46 @@
+package e63.course.assignment6
+
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.Row
+import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.types.StructField
+import org.apache.spark.sql.types.StringType
+import org.apache.spark.sql.types.StructField
+import org.apache.spark.sql.types.DoubleType
+import org.apache.spark.sql.types.LongType
+import org.apache.spark.sql.types.IntegerType
+import org.apache.spark.sql.types.FloatType
+
+object Problem3 {
+  def main(args: Array[String]) {
+    
+    // set input files
+    val ebayFilePath = "input_files_for_problem3/ebay.csv"
+    
+    // Create a Spark Configuration
+    val sparkConf = new SparkConf().setMaster("local").setAppName("Assignment6_Problem3")
+      
+    // Create a Scala Spark Context.
+    val sparkContext = new SparkContext(sparkConf);
+    
+    val sqlContext = new SQLContext(sparkContext)
+    
+    val ebayRDD = sparkContext.textFile(ebayFilePath)
+    
+    val ebayRDDOfRows = ebayRDD.map(l => Row(l.split(",")(0), l.split(",")(1), l.split(",")(2), l.split(",")(3), l.split(",")(4), l.split(",")(5), l.split(",")(6), l.split(",")(7), l.split(",")(8)))
+    
+    val schema = StructType(StructField("auctionid", IntegerType, false) ::
+     StructField("bid", IntegerType, false) ::
+     StructField("bidtime", FloatType, false) ::
+     StructField("bidder", StringType, false) ::
+     StructField("bidderrate", IntegerType, false) ::
+     StructField("openbid", FloatType, false) :: 
+     StructField("price", FloatType, false) ::
+     StructField("item", StringType, false) ::
+     StructField("daystolive", IntegerType, false) :: Nil)
+     
+     val ebay
+  }
+}

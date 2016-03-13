@@ -1,0 +1,21 @@
+package e63.course.assignment6
+
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+import org.apache.spark.sql.SQLContext
+
+object Problem3 {
+  def main(args: Array[String]) {
+    
+    // set input files
+    val ebayFilePath = "input_files_for_problem3/ebay.csv"
+    
+    // Create a Spark Configuration
+    val sparkConf = new SparkConf().setMaster("local").setAppName("Assignment6_Problem3")
+      
+    // Create a Scala Spark Context.
+    val sparkContext = new SparkContext(sparkConf);
+    
+    val sqlContext = new SQLContext(sparkContext)
+  }
+}

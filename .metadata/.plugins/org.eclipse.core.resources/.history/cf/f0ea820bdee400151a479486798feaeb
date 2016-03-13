@@ -1,0 +1,35 @@
+package e63.course.assignment6
+
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+
+object Problem1 {
+  def main(args: Array[String]) {
+    
+    // set input and out files/dirs
+    val inputFileAName = args(0)
+    val inputFileBName = args(1)
+    
+      
+    // Create a Spark Configuration
+    val sparkConf = new SparkConf().setMaster("local").setAppName("Assignment6_Problem1")
+      
+    // Create a Scala Spark Context.
+    val sparkContext = new SparkContext(sparkConf);
+    
+    // Load the input data.
+    val paragraphA = sparkContext.textFile(inputFileAName)
+    val paragraphB = sparkContext.textFile(inputFileBName)
+    
+    val paragraphATokens = paragraphA.flatMap(line => line.split(" "))
+    val paragraphBTokens = paragraphB.flatMap(line => line.split(" "))
+    
+    
+    val paragraphAWords = paragraphATokens.filter(line => !line.matches("[0-9]*"))
+    val paragraphBWords = paragraphBTokens.filter(line => !line.matches("[0-9]*"))
+    
+    paragraphAWords.saveAsTextFile()
+    paragraphBWords.saveAsTextFile()
+    
+  }
+}

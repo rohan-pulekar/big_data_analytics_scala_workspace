@@ -1,0 +1,46 @@
+package e63.course.assignment6
+
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+
+object Problem1 {
+  def main(args: Array[String]) {
+    
+    // set input and out files/dirs
+    val paragraphAFileName = args(0)
+    val paragraphBFileName = args(1)
+    
+      
+    // Create a Spark Configuration
+    val sparkConf = new SparkConf().setMaster("local").setAppName("Assignment6_Problem1")
+      
+    // Create a Scala Spark Context.
+    val sparkContext = new SparkContext(sparkConf);
+    
+    // Load the input data.
+    val paragraphA = sparkContext.textFile(paragraphAFileName)
+    val paragraphB = sparkContext.textFile(paragraphBFileName)
+    
+    val paragraphATokens = paragraphA.flatMap(line => line.split(" "))
+    val paragraphBTokens = paragraphB.flatMap(line => line.split(" "))
+    
+    
+    val paragraphAWordsOnly = paragraphATokens.filter(line => line.matches("[A-Za-z.]+"))
+    val paragraphBWordsOnly = paragraphBTokens.filter(line => line.matches("[A-Za-z.]+"))
+    
+    paragraphAWordsOnly.take(10).foreach(println)
+    paragraphBWordsOnly.take(10).foreach(println)
+    
+    val paragraphAUniqueWordsOnly = paragraphATokens.filter(line => line.matches("[A-Za-z.]+"))
+    val paragraphBUniqueWordsOnly = paragraphBTokens.filter(line => line.matches("[A-Za-z.]+"))
+    
+    println("Total number of tokens in paragraphA: " + paragraphATokens.count());
+    println("Total number of words in paragraphA: " + paragraphAWordsOnly.count());
+    println("Total number of unique words in paragraphA: " + paragraphATokens.count());
+    
+    println("Total number of tokens in paragraphB: " + paragraphBTokens.count());
+    println("Total number of words in paragraphB: " + paragraphBWordsOnly.count());
+    println("Total number of unique words in paragraphB: " + paragraphBTokens.count());
+        
+  }
+}

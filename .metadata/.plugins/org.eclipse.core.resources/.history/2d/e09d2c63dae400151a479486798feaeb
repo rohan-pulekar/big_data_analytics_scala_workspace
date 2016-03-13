@@ -1,0 +1,9 @@
+package a.b
+
+object TestScalaClass {
+    def main(args: Array[String]) {
+      val sparkConf = new SparkConf().setMaster("local").setAppName("Assignment6_Problem1")
+      val sparkContext = new SparkContext(sparkConf);
+      sparkContext.parallelize([1, 2, 3, 4]).
+    }
+}

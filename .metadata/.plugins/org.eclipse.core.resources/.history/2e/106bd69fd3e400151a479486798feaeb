@@ -1,0 +1,11 @@
+package a.b
+
+object TestScalaClass {
+    def main(args: Array[String]) {
+      if ("09879".matches("[0-9]*")) {
+        println("number")
+      } else {
+        println("word")
+      }
+    }
+}

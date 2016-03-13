@@ -1,0 +1,53 @@
+package e63.course.assignment6
+
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+import scala.Tuple3
+import org.apache.spark.sql.Row
+import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.types.StructField
+import org.apache.spark.sql.types.StringType
+import org.apache.spark.sql.types.StructField
+import org.apache.spark.sql.types.DoubleType
+import org.apache.spark.sql.types.LongType
+import org.apache.spark.sql.types.IntegerType
+import org.apache.spark.sql.types.FloatType
+
+object Problem2 {
+  def main(args: Array[String]) {
+        
+    // set input files
+    val empsFilePath = "input_files_for_problem2/emps.txt"
+    
+    // Create a Spark Configuration
+    val sparkConf = new SparkConf().setMaster("local").setAppName("Assignment6_Problem2")
+      
+    // Create a Scala Spark Context.
+    val sparkContext = new SparkContext(sparkConf);
+    
+    val sqlContext = new SQLContext(sparkContext)
+    
+    val emps = sparkContext.textFile(empsFilePath)
+            
+    val emps_fields = emps.map(line => new Tuple3((line.split(", ")(0)), (line.split(",")(1)), (line.split(", ")(2))))
+
+    val employees = emps_fields.map(e => Row(e._1, e._2, e._3))
+    
+    val empsSchema = StructType(StructField("name", StringType, false) ::
+     StructField("age", IntegerType, false) ::
+     StructField("salary", FloatType, false) :: Nil)
+    
+    val employeesDataFrame = sqlContext.createDataFrame(employees, empsSchema)
+    
+    println("Contents of employees data frame:")
+    
+    employeesDataFrame.select("name", "age", "salary").show()
+    
+    employeesDataFrame.registerTempTable("employees_temp_table")
+    
+    println("Will now select from employees_temp_table names of employees who have salary greater than 3500")
+    
+    sqlContext.sql("select name from employees_temp_table where salary>3500").show()
+  }
+}
