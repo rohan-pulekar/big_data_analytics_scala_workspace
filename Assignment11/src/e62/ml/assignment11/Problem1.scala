@@ -3,14 +3,14 @@ package e62.ml.assignment11
 import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
 import org.apache.spark.mllib.classification.NaiveBayes
+import org.apache.spark.mllib.evaluation.RegressionMetrics
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.mllib.regression.LinearRegressionWithSGD
 import org.apache.spark.mllib.tree.DecisionTree
-import org.apache.spark.mllib.tree.RandomForest
 import org.apache.spark.mllib.tree.GradientBoostedTrees
+import org.apache.spark.mllib.tree.RandomForest
 import org.apache.spark.mllib.tree.configuration.BoostingStrategy
-import org.apache.spark.mllib.tree.model.GradientBoostedTreesModel
 
 object Problem1 {
   def main(args: Array[String]) {
@@ -22,10 +22,11 @@ object Problem1 {
 
     val headersRow = rawCarDataRDDWithHeaders.first()
 
+    println("headers:")
     println(headersRow)
+    println()
 
     val uncleanCarDataRDDOfUnsplitLines = rawCarDataRDDWithHeaders.filter(rowAsAString => (rowAsAString != headersRow))
-    uncleanCarDataRDDOfUnsplitLines.collect().foreach(println)
 
     val uncleanCarDataRDD = uncleanCarDataRDDOfUnsplitLines.map(rowAsAString => rowAsAString.split(","))
 
@@ -39,21 +40,17 @@ object Problem1 {
 
     entireDataRDD.cache
 
-    entireDataRDD.collect().foreach(println)
-
-    entireDataRDD.zipWithIndex().collect().foreach(println)
     val entireDataRDDWithIdx = entireDataRDD.zipWithIndex().map(mapEntry => (mapEntry._2, mapEntry._1))
-
-    entireDataRDDWithIdx.collect().foreach(println)
 
     val testDataRDDWithIdx = entireDataRDDWithIdx.sample(false, 0.1, 40)
     val trainDataRDDWithIdx = entireDataRDDWithIdx.subtract(testDataRDDWithIdx)
 
     val testDataRDD = testDataRDDWithIdx.map(mapEntry => mapEntry._2)
     val trainingDataRDD = trainDataRDDWithIdx.map(mapEntry => mapEntry._2)
-
-    println(testDataRDD.collect().size)
-    println(trainingDataRDD.collect().size)
+    
+    println("Test data size:" + testDataRDD.collect().size)
+    println("Training data size:" + trainingDataRDD.collect().size)
+    println()
 
     trainingDataRDD.cache
 
@@ -64,19 +61,32 @@ object Problem1 {
     val decisionTreePredictedVsActual = testDataRDD.map { testDataRow =>
       (decisionTreeTrainedModel.predict(testDataRow.features), testDataRow.label)
     }
-    decisionTreePredictedVsActual.collect().foreach(println)
-
-    val linearTrainedModel = LinearRegressionWithSGD.train(trainingDataRDD, numIterations, 0.1)
-    val linearPredictedVsActual = testDataRDD.map { testDataRow =>
-      (linearTrainedModel.predict(testDataRow.features), testDataRow.label)
+    var metrics = new RegressionMetrics(decisionTreePredictedVsActual)
+    println("Performance metrics for Decision Tree :")
+    printMetrics(metrics)
+    println()
+    
+    val linearWithSGDTrainedModel = LinearRegressionWithSGD.train(trainingDataRDD, numIterations, 0.1)
+    val linearWithSGDPredictedVsActual = testDataRDD.map { testDataRow =>
+      (linearWithSGDTrainedModel.predict(testDataRow.features), testDataRow.label)
     }
-    linearPredictedVsActual.collect().foreach(println)
+    metrics = new RegressionMetrics(linearWithSGDPredictedVsActual)
+    println("Performance metrics for Linear Regression:")
+    printMetrics(metrics)
+    println()
+    val linearWithSGDOutputRDD = testDataRDD.map (testDataRow =>
+      (testDataRow.features(0), linearWithSGDTrainedModel.predict(testDataRow.features), testDataRow.label)
+    ).saveAsTextFile("./output_files/linearWithSGDOutput.txt")
+    
 
     val naiveTrainedModel = NaiveBayes.train(trainingDataRDD)
     val naivePredictedVsActual = testDataRDD.map { testDataRow =>
       (naiveTrainedModel.predict(testDataRow.features), testDataRow.label)
     }
-    naivePredictedVsActual.collect().foreach(println)
+    metrics = new RegressionMetrics(naivePredictedVsActual)
+    println("Performance metrics for Naive Bayes:")
+    printMetrics(metrics)
+    println()
 
     val numTrees = 3
     val maxDepth = 4
@@ -86,8 +96,6 @@ object Problem1 {
     val randomForestPredictedVsActual = testDataRDD.map { testDataRow =>
       (randomForestTrainedModel.predict(testDataRow.features), testDataRow.label)
     }
-    randomForestPredictedVsActual.collect().foreach(println)
-    println("------------")
     val boostingStrategy = BoostingStrategy.defaultParams("Regression")
     boostingStrategy.numIterations = numIterations
     boostingStrategy.treeStrategy.maxDepth = 5
@@ -96,9 +104,21 @@ object Problem1 {
     val gradientPredictedVsActual = testDataRDD.map { testDataRow =>
       (gradientTrainedModel.predict(testDataRow.features), testDataRow.label)
     }
-    gradientPredictedVsActual.collect().foreach(println)
+    metrics = new RegressionMetrics(gradientPredictedVsActual)
+    println("Performance metrics for Gradient Boosted:")
+    printMetrics(metrics)
+    println()
 
     // Unable to use SVMWithSGD
 
+  }
+
+  def printMetrics(regressionMetrics: RegressionMetrics): Unit = {
+    println("bnm,")
+    println(s"MSE = ${regressionMetrics.meanSquaredError}")
+    println(s"RMSE = ${regressionMetrics.rootMeanSquaredError}")
+    println(s"R-squared = ${regressionMetrics.r2}")
+    println(s"MAE = ${regressionMetrics.meanAbsoluteError}")
+    println(s"Explained variance = ${regressionMetrics.explainedVariance}")
   }
 }
