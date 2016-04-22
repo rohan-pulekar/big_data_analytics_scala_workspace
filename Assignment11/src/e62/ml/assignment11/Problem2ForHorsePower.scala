@@ -10,7 +10,6 @@ import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.linalg.distributed.RowMatrix
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.mllib.regression.LinearRegressionWithSGD
-import org.apache.spark.mllib.tree.DecisionTree
 import org.apache.spark.mllib.tree.GradientBoostedTrees
 import org.apache.spark.mllib.tree.RandomForest
 import org.apache.spark.mllib.tree.configuration.BoostingStrategy
@@ -38,12 +37,10 @@ object Problem2ForHorsePower {
 
     val cleanCarDataRDD = uncleanCarDataRDD.map(rowAsArrayOfValues => rowAsArrayOfValues.map(value => value.trim()))
 
-    val cylindersCategoriesRDD = cleanCarDataRDD.map(rowAsArrayOfValues => rowAsArrayOfValues(headersMap("Cylinders"))).distinct().collect
     val manufacturerCategoriesRDD = cleanCarDataRDD.map(rowAsArrayOfValues => rowAsArrayOfValues(headersMap("Manufacturer"))).distinct().collect
-    val modelYearCategoriesRDD = cleanCarDataRDD.map(rowAsArrayOfValues => rowAsArrayOfValues(headersMap("Model_Year"))).distinct().collect
     val originCategoriesRDD = cleanCarDataRDD.map(rowAsArrayOfValues => rowAsArrayOfValues(headersMap("Origin"))).distinct().collect
 
-    val categoriesMap = cylindersCategoriesRDD.union(manufacturerCategoriesRDD).union(modelYearCategoriesRDD).union(originCategoriesRDD).zipWithIndex.toMap
+    val categoriesMap = manufacturerCategoriesRDD.union(originCategoriesRDD).zipWithIndex.toMap
     val numberOfCategories = categoriesMap.size
     println("Number of categories:" + numberOfCategories)
 
@@ -55,19 +52,13 @@ object Problem2ForHorsePower {
 
       val categoryFeatures = Array.ofDim[Double](numberOfCategories)
 
-      val cylindersCategoryIdx = categoriesMap(rowAsArrayOfValues(headersMap("Cylinders")))
-      categoryFeatures(cylindersCategoryIdx) = 1.0
-
       val manufacturerCategoryIdx = categoriesMap(rowAsArrayOfValues(headersMap("Manufacturer")))
       categoryFeatures(manufacturerCategoryIdx) = 1.0
-
-      val modelYearCategoryIdx = categoriesMap(rowAsArrayOfValues(headersMap("Model_Year")))
-      categoryFeatures(modelYearCategoryIdx) = 1.0
 
       val originCategoryIdx = categoriesMap(rowAsArrayOfValues(headersMap("Origin")))
       categoryFeatures(originCategoryIdx) = 1.0
 
-      val nonCategoryFeatures = rowAsArrayOfValues.slice(3, 4).union(rowAsArrayOfValues.slice(10, 12)).map(feature => if (feature == "NaN") 0.0 else feature.toDouble)
+      val nonCategoryFeatures = rowAsArrayOfValues.slice(2, 3).union(rowAsArrayOfValues.slice(3, 4)).union(rowAsArrayOfValues.slice(7, 8)).map(feature => feature.toDouble)
 
       val features = categoryFeatures ++ nonCategoryFeatures
 
@@ -79,14 +70,10 @@ object Problem2ForHorsePower {
     val features = dataRDDForHorsePower.map(labeledPoint => labeledPoint.features)
     val featuresMatrix = new RowMatrix(features)
     val featuresMatrixSummary = featuresMatrix.computeColumnSummaryStatistics()
-
     val scaler = new StandardScaler(withMean = true, withStd = true).fit(features)
     val scaledDataRDDForHorsePower = dataRDDForHorsePower.map(lp => LabeledPoint(lp.label, scaler.transform(lp.features)))
-    // compare the raw features with the scaled features
-//    println("dataRDDForHorsePower.first.features:" + dataRDDForHorsePower.first.features)
-//    println("scaledDataRDDForHorsePower.first.features:" + scaledDataRDDForHorsePower.first.features)
 
-    val dataRDDForHorsePowerWithIdx = scaledDataRDDForHorsePower.zipWithIndex().map(mapEntry => (mapEntry._2, mapEntry._1))
+    val dataRDDForHorsePowerWithIdx = dataRDDForHorsePower.zipWithIndex().map(mapEntry => (mapEntry._2, mapEntry._1))
 
     val testDataRDDForHorsePowerWithIdx = dataRDDForHorsePowerWithIdx.sample(false, 0.1, 40)
     val trainDataRDDForHorsePowerWithIdx = dataRDDForHorsePowerWithIdx.subtract(testDataRDDForHorsePowerWithIdx)
@@ -100,16 +87,16 @@ object Problem2ForHorsePower {
 
     trainingDataRDDForHorsePower.cache
 
-    val numIterations = 30
-    val stepSize = 0.0001
+    val numIterationsForLR = 10000
+    val stepSizeForLR = 0.0001
 
     /*****  Linear Regression with SGD model for Horse Power start ****/
-    val linearSGDTrainedModelForHorsePower = LinearRegressionWithSGD.train(trainingDataRDDForHorsePower, numIterations, stepSize)
+    val linearSGDTrainedModelForHorsePower = LinearRegressionWithSGD.train(trainingDataRDDForHorsePower, numIterationsForLR, stepSizeForLR)
     val linearSGDPredictedVsActualForHorsePower = testDataRDDForHorsePower.map { testDataRow =>
       (Math.round(linearSGDTrainedModelForHorsePower.predict(testDataRow.features)).toDouble, testDataRow.label)
     }
-        println("Predicted vs Actual value of Horse Power for Linear Regression with SGD")
-        linearSGDPredictedVsActualForHorsePower.collect().foreach(println)
+    println("Predicted vs Actual value of Horse Power for Linear Regression with SGD")
+    linearSGDPredictedVsActualForHorsePower.collect().foreach(println)
     var metrics = new RegressionMetrics(linearSGDPredictedVsActualForHorsePower)
     println("Performance metrics for Linear Regression with SGD Model for Horse Power:")
     printMetrics(metrics)
@@ -135,7 +122,7 @@ object Problem2ForHorsePower {
 
     /*****  Random Forest model for Gradient Boosted Model start ****/
     val boostingStrategy = BoostingStrategy.defaultParams("Regression")
-    boostingStrategy.numIterations = numIterations
+    boostingStrategy.numIterations = 10
     boostingStrategy.treeStrategy.maxDepth = 5
     boostingStrategy.treeStrategy.categoricalFeaturesInfo = Map[Int, Int]()
     val gradientTrainedModelForHorsePower = GradientBoostedTrees.train(trainingDataRDDForHorsePower, boostingStrategy)

@@ -20,7 +20,7 @@ object Problem2ForAcceleration {
     val conf = new SparkConf().setMaster("local").setAppName("Assignment11-Problem2ForAcceleration")
     val sc = new SparkContext(conf)
 
-    val rawCarDataRDDWithHeaders = sc.textFile("./data/Small_Car_Data.csv")
+    val rawCarDataRDDWithHeaders = sc.textFile("./data/Small_Car_Data_cleaned.csv")
 
     val headersRow = rawCarDataRDDWithHeaders.first()
 
@@ -38,12 +38,10 @@ object Problem2ForAcceleration {
 
     val cleanCarDataRDD = uncleanCarDataRDD.map(rowAsArrayOfValues => rowAsArrayOfValues.map(value => value.trim()))
 
-    val cylindersCategoriesRDD = cleanCarDataRDD.map(rowAsArrayOfValues => rowAsArrayOfValues(headersMap("Cylinders"))).distinct().collect
     val manufacturerCategoriesRDD = cleanCarDataRDD.map(rowAsArrayOfValues => rowAsArrayOfValues(headersMap("Manufacturer"))).distinct().collect
-    val modelYearCategoriesRDD = cleanCarDataRDD.map(rowAsArrayOfValues => rowAsArrayOfValues(headersMap("Model_Year"))).distinct().collect
     val originCategoriesRDD = cleanCarDataRDD.map(rowAsArrayOfValues => rowAsArrayOfValues(headersMap("Origin"))).distinct().collect
 
-    val categoriesMap = cylindersCategoriesRDD.union(manufacturerCategoriesRDD).union(modelYearCategoriesRDD).union(originCategoriesRDD).zipWithIndex.toMap
+    val categoriesMap = manufacturerCategoriesRDD.union(originCategoriesRDD).zipWithIndex.toMap
     val numberOfCategories = categoriesMap.size
     println("Number of categories:" + numberOfCategories)
 
@@ -55,19 +53,13 @@ object Problem2ForAcceleration {
 
       val categoryFeatures = Array.ofDim[Double](numberOfCategories)
 
-      val cylindersCategoryIdx = categoriesMap(rowAsArrayOfValues(headersMap("Cylinders")))
-      categoryFeatures(cylindersCategoryIdx) = 1.0
-
       val manufacturerCategoryIdx = categoriesMap(rowAsArrayOfValues(headersMap("Manufacturer")))
       categoryFeatures(manufacturerCategoryIdx) = 1.0
-
-      val modelYearCategoryIdx = categoriesMap(rowAsArrayOfValues(headersMap("Model_Year")))
-      categoryFeatures(modelYearCategoryIdx) = 1.0
 
       val originCategoryIdx = categoriesMap(rowAsArrayOfValues(headersMap("Origin")))
       categoryFeatures(originCategoryIdx) = 1.0
 
-      val nonCategoryFeatures = rowAsArrayOfValues.slice(3, 4).union(rowAsArrayOfValues.slice(10, 12)).map(feature => if (feature == "NaN") 0.0 else feature.toDouble)
+      val nonCategoryFeatures = rowAsArrayOfValues.slice(2, 3).union(rowAsArrayOfValues.slice(3, 4)).union(rowAsArrayOfValues.slice(7, 8)).map(feature => feature.toDouble)
 
       val features = categoryFeatures ++ nonCategoryFeatures
 
@@ -79,14 +71,10 @@ object Problem2ForAcceleration {
     val features = dataRDDForAcceleration.map(labeledPoint => labeledPoint.features)
     val featuresMatrix = new RowMatrix(features)
     val featuresMatrixSummary = featuresMatrix.computeColumnSummaryStatistics()
-
     val scaler = new StandardScaler(withMean = true, withStd = true).fit(features)
     val scaledDataRDDForAcceleration = dataRDDForAcceleration.map(lp => LabeledPoint(lp.label, scaler.transform(lp.features)))
-    // compare the raw features with the scaled features
-//    println("dataRDDForAcceleration.first.features:" + dataRDDForAcceleration.first.features)
-//    println("scaledDataRDDForAcceleration.first.features:" + scaledDataRDDForAcceleration.first.features)
 
-    val dataRDDForAccelerationWithIdx = scaledDataRDDForAcceleration.zipWithIndex().map(mapEntry => (mapEntry._2, mapEntry._1))
+    val dataRDDForAccelerationWithIdx = dataRDDForAcceleration.zipWithIndex().map(mapEntry => (mapEntry._2, mapEntry._1))
 
     val testDataRDDForAccelerationWithIdx = dataRDDForAccelerationWithIdx.sample(false, 0.1, 40)
     val trainDataRDDForAccelerationWithIdx = dataRDDForAccelerationWithIdx.subtract(testDataRDDForAccelerationWithIdx)
@@ -100,12 +88,11 @@ object Problem2ForAcceleration {
 
     trainingDataRDDForAcceleration.cache
 
-    val numIterations = 30
-    val stepSize = 0.0001
-  
+    val numIterationsForLR = 10000
+    val stepSizeForLR = 0.0001
 
     /*****  Linear Regression with SGD model for Acceleration start ****/
-    val linearSGDTrainedModelForAcceleration = LinearRegressionWithSGD.train(trainingDataRDDForAcceleration, numIterations, stepSize)
+    val linearSGDTrainedModelForAcceleration = LinearRegressionWithSGD.train(trainingDataRDDForAcceleration, numIterationsForLR, stepSizeForLR)
     val linearSGDPredictedVsActualForAcceleration = testDataRDDForAcceleration.map { testDataRow =>
       (Math.round(linearSGDTrainedModelForAcceleration.predict(testDataRow.features)).toDouble, testDataRow.label)
     }
@@ -136,7 +123,7 @@ object Problem2ForAcceleration {
 
     /*****  Random Forest model for Gradient Boosted Model start ****/
     val boostingStrategy = BoostingStrategy.defaultParams("Regression")
-    boostingStrategy.numIterations = numIterations
+    boostingStrategy.numIterations = 10
     boostingStrategy.treeStrategy.maxDepth = 5
     boostingStrategy.treeStrategy.categoricalFeaturesInfo = Map[Int, Int]()
     val gradientTrainedModelForAcceleration = GradientBoostedTrees.train(trainingDataRDDForAcceleration, boostingStrategy)

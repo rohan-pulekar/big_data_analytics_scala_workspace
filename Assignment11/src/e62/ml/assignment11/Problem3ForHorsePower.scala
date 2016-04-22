@@ -79,12 +79,8 @@ object Problem3ForHorsePower {
     val features = dataRDDForHorsePower.map(labeledPoint => labeledPoint.features)
     val featuresMatrix = new RowMatrix(features)
     val featuresMatrixSummary = featuresMatrix.computeColumnSummaryStatistics()
-
     val scaler = new StandardScaler(withMean = true, withStd = true).fit(features)
     val scaledDataRDDForHorsePower = dataRDDForHorsePower.map(lp => LabeledPoint(lp.label, scaler.transform(lp.features)))
-    // compare the raw features with the scaled features
-//    println("dataRDDForHorsePower.first.features:" + dataRDDForHorsePower.first.features)
-//    println("scaledDataRDDForHorsePower.first.features:" + scaledDataRDDForHorsePower.first.features)
 
     val dataRDDForHorsePowerWithIdx = scaledDataRDDForHorsePower.zipWithIndex().map(mapEntry => (mapEntry._2, mapEntry._1))
 

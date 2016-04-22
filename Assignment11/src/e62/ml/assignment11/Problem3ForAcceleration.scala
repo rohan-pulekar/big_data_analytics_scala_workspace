@@ -79,12 +79,8 @@ object Problem3ForAcceleration {
     val features = dataRDDForAcceleration.map(labeledPoint => labeledPoint.features)
     val featuresMatrix = new RowMatrix(features)
     val featuresMatrixSummary = featuresMatrix.computeColumnSummaryStatistics()
-
     val scaler = new StandardScaler(withMean = true, withStd = true).fit(features)
     val scaledDataRDDForAcceleration = dataRDDForAcceleration.map(lp => LabeledPoint(lp.label, scaler.transform(lp.features)))
-    // compare the raw features with the scaled features
-    //    println("dataRDDForAcceleration.first.features:" + dataRDDForAcceleration.first.features)
-    //    println("scaledDataRDDForAcceleration.first.features:" + scaledDataRDDForAcceleration.first.features)
 
     val dataRDDForAccelerationWithIdx = scaledDataRDDForAcceleration.zipWithIndex().map(mapEntry => (mapEntry._2, mapEntry._1))
 
@@ -102,9 +98,11 @@ object Problem3ForAcceleration {
 
     val numIterations = 30
     val stepSize = 0.0001
+    val maxDepth = 5
+    val maxBins = 9
 
     /*****  Decision Tree model for Acceleration start ****/
-    val dTreeTrainedModelForAcceleration = DecisionTree.trainRegressor(trainingDataRDDForAcceleration, Map[Int, Int](), "variance", 5, 9)
+    val dTreeTrainedModelForAcceleration = DecisionTree.trainRegressor(trainingDataRDDForAcceleration, Map[Int, Int](), "variance", maxDepth, maxBins)
     val dTreePredictedVsActualForAcceleration = testDataRDDForAcceleration.map { testDataRow =>
       (Math.round(dTreeTrainedModelForAcceleration.predict(testDataRow.features)).toDouble, testDataRow.label)
     }
