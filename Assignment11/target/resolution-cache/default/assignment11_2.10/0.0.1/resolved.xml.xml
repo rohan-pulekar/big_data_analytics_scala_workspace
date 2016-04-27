@@ -4,7 +4,7 @@
 		module="assignment11_2.10"
 		revision="0.0.1"
 		status="integration"
-		publication="20160422151131"
+		publication="20160422214050"
 	>
 		<description>
 		Assignment11
@@ -35,5 +35,6 @@
 		<dependency org="org.scala-lang" name="scala-compiler" rev="2.10.4" conf="scala-tool->default,optional(default)"/>
 		<dependency org="org.scala-lang" name="scala-library" rev="2.10.4" conf="scala-tool->default,optional(default);compile->default(compile)"/>
 		<dependency org="org.apache.spark" name="spark-core_2.10" rev="1.1.0" conf="provided->default(compile)"/>
+		<dependency org="org.apache.spark" name="spark-mllib_2.10" rev="1.3.0" conf="provided->default(compile)"/>
 	</dependencies>
 </ivy-module>
